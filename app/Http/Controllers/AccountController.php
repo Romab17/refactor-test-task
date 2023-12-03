@@ -3,10 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\LoyaltyAccount;
+use App\Service\AccountService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AccountController extends Controller
 {
+    private AccountService $accountService;
+    public function __construct(AccountService $accountService) {
+        $this->accountService = $accountService;
+    }
     public function create(Request $request)
     {
         return LoyaltyAccount::create($request->all());
@@ -50,17 +56,14 @@ class AccountController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function balance($type, $id)
+    public function balance($type, $id): JsonResponse
     {
-        if (($type == 'phone' || $type == 'card' || $type == 'email') && $id != '') {
-            if ($account = LoyaltyAccount::where($type, '=', $id)->first()) {
-                return response()->json(['balance' => $account->getBalance()], 400);
+        $balance = $this->accountService->getBalance($type, $id);
 
-            } else {
-                return response()->json(['message' => 'Account is not found'], 400);
-            }
+        if ($balance) {
+            return response()->json(['balance' => $balance]);
         } else {
-            throw new \InvalidArgumentException('Wrong parameters');
+            return response()->json(['message' => 'ERR_GETTING_BALANCE'], 400);
         }
     }
 }
