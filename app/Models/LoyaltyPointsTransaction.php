@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Traits\CreatedUpdatedTrait;
 use Illuminate\Database\Eloquent\Model;
 
 class LoyaltyPointsTransaction extends Model
 {
+    use CreatedUpdatedTrait;
+
     protected $table = 'loyalty_points_transaction';
 
     protected $fillable = [
@@ -29,7 +32,7 @@ class LoyaltyPointsTransaction extends Model
             };
         }
 
-        return LoyaltyPointsTransaction::create([
+        $transaction = LoyaltyPointsTransaction::create([
             'account_id' => $account_id,
             'points_rule' => $pointsRule?->id,
             'points_amount' => $points_amount,
@@ -38,14 +41,24 @@ class LoyaltyPointsTransaction extends Model
             'payment_amount' => $payment_amount,
             'payment_time' => $payment_time,
         ]);
+
+        $transaction->setCreatedAt();
+        $transaction->save();
+
+        return $transaction;
     }
 
     public static function withdrawLoyaltyPoints($account_id, $points_amount, $description) {
-        return LoyaltyPointsTransaction::create([
+        $transaction = LoyaltyPointsTransaction::create([
             'account_id' => $account_id,
             'points_rule' => 'withdraw',
             'points_amount' => -$points_amount,
             'description' => $description,
         ]);
+
+        $transaction->setCreatedAt();
+        $transaction->save();
+
+        return $transaction;
     }
 }
